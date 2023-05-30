@@ -10,7 +10,7 @@ const generateToken = (id) => {
 
 const registerUser = async (req, res, next) => {
   const { email, name, password, age } = req.body;
-  console.log(req.body);
+
   try {
     //check if user has entered all details
     if (!email || !name || !password || !age) {
@@ -55,28 +55,32 @@ const registerUser = async (req, res, next) => {
           age,
           password: hash,
         });
-        console.log(user);
+
         //check if user is created
         if (user) {
           return res.status(201).json({
             stausCode: 201,
-            data: user,
+            data: { user, token: generateToken(user._id) },
             error: false,
-            token: generateToken(user._id),
             message: "User created succesfully",
           });
         } else {
           return res.status(401).json({
-            stausCode: 401,
+            statusCode: 401,
             data: null,
             error: true,
-            message: "Inavalid User data",
+            message: "Invalid User data",
           });
         }
       });
     });
   } catch (error) {
-    next(error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      data: null,
+      error: true,
+      message: error || "Failed to register",
+    });
   }
 };
 
@@ -90,21 +94,25 @@ const loginUser = async (req, res, next) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       res.status(200).json({
         stausCode: 200,
-        data: user,
+        data: { user, token: generateToken(user._id) },
         error: false,
-        token: generateToken(user._id),
         message: "User logged in succesfully",
       });
     } else {
       return res.status(401).json({
-        stausCode: 401,
+        statusCode: 401,
         data: null,
         error: true,
         message: "Invalid user credentials",
       });
     }
   } catch (error) {
-    next(error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      data: null,
+      error: true,
+      message: error || "Failed to login",
+    });
   }
 };
 
@@ -113,14 +121,15 @@ const updateUserDetails = async (req, res, next) => {
 
   if (!name || !age) {
     return res.status(400).json({
-      stausCode: 400,
+      statusCode: 400,
       data: null,
-      eroor: true,
+      error: true,
       message: "Please fill all fields",
     });
   }
+
   try {
-    const response = await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.params.id,
       {
         $set: {
@@ -130,15 +139,20 @@ const updateUserDetails = async (req, res, next) => {
       },
       { new: true }
     );
-    console.log(response);
+
     res.status(200).json({
-      stausCode: 200,
-      data: response,
+      statusCode: 200,
+      data: { user },
       error: false,
       message: "Details Updated Successfully",
     });
   } catch (error) {
-    next(error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      data: null,
+      error: true,
+      message: error || "Failed to update user",
+    });
   }
 };
 

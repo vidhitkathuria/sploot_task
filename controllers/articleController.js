@@ -23,15 +23,20 @@ const createArticle = async (req, res, next) => {
     });
 
     // Save the article to the database
-    const savedArticle = await article.save();
+    await article.save();
     return res.status(201).json({
       statusCode: 201,
-      data: savedArticle,
+      data: { article },
       error: false,
       message: "article added succesfully",
     });
   } catch (error) {
-    next(error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      data: null,
+      error: true,
+      message: error || "Failed to save article",
+    });
   }
 };
 
@@ -40,11 +45,17 @@ const getArticles = async (req, res, next) => {
     const articles = await Article.find().populate("user_id", "name");
     return res.status(200).json({
       statusCode: 200,
-      data: articles,
+      data: { articles },
       error: false,
+      message: "All articles fetched!",
     });
   } catch (error) {
-    next(error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      data: null,
+      error: true,
+      message: error || "Failed to fetch articles",
+    });
   }
 };
 
